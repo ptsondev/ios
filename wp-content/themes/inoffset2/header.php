@@ -30,6 +30,8 @@ if($google_ad){
             <?php wp_title( '|', true, 'right' ); ?>
         </title>
 
+        <link rel="shortcut icon" href="<?php echo PATH_TO_IMG;?>/favicon.ico" type="image/x-icon"/>
+        
         <link href="<?php echo get_template_directory_uri()?>/css/bootstrap.css" rel="stylesheet" />
         <link href="<?php echo get_template_directory_uri()?>/js/fancybox/jquery.fancybox.css" rel="stylesheet" />
         <link href="<?php echo get_template_directory_uri()?>/css/fonts/fonts.css" rel="stylesheet" />
@@ -142,6 +144,12 @@ if($google_ad){
                                     <div class="ava"> <img src="/wp-content/uploads/2017/10/in-nhanh-card-tren-giay-kraft.jpg" /></div>
                                 </a>
                             </div>
+                            <div class="item">
+                                <a href="/in-menu-nha-hang-quan-an/">
+                                    <div class="name">In menu</div>
+                                    <div class="ava"> <img src="/wp-content/uploads/2018/05/in-menu-kem.jpg" /></div>
+                                </a>
+                            </div>
                         </div>
 
                         <div class="col-sm-4 col-xs-12">
@@ -157,6 +165,12 @@ if($google_ad){
                                     <div class="ava"><img src="<?php echo PATH_TO_IMG?>/in-to-roi.png" /></div>
                                 </a>
                             </div>
+                            <div class="item">
+                                <a href="/in-thiep-moi-su-kien/">
+                                    <div class="name">In thiệp mời</div>
+                                    <div class="ava"><img src="/wp-content/uploads/2018/05/chuyen-in-nhanh-thiep-moi.jpg" /></div>
+                                </a>
+                            </div>
                         </div>
                         <div class="col-sm-4 col-xs-12">
                             <div class="item">
@@ -169,6 +183,12 @@ if($google_ad){
                                 <a href="/in-tui-giay-hop-giay/">
                                     <div class="name">In túi giấy</div>
                                     <div class="ava"><img src="<?php echo PATH_TO_IMG?>/in-tui-giay.jpg" /></div>
+                                </a>
+                            </div>
+                            <div class="item">
+                                <a href="/thiet-ke-va-in-lich-tet-2019/">
+                                    <div class="name">In lịch tết</div>
+                                    <div class="ava"><img src="/wp-content/uploads/2017/09/thiet-ke-va-in-lich-tet-2019.jpg" /></div>
                                 </a>
                             </div>
                         </div>

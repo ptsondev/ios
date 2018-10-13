@@ -28,7 +28,8 @@ if($google_ad){
     <title>
         <?php wp_title( '|', true, 'right' ); ?>
     </title>
-
+    <link rel="shortcut icon" href="<?php echo PATH_TO_IMG;?>favicon.ico" type="image/x-icon"/>
+    
     
     <style amp-boilerplate>body{-webkit-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-moz-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-ms-animation:-amp-start 8s steps(1,end) 0s 1 normal both;animation:-amp-start 8s steps(1,end) 0s 1 normal both}@-webkit-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-moz-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-ms-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-o-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}</style><noscript><style amp-boilerplate>body{-webkit-animation:none;-moz-animation:none;-ms-animation:none;animation:none}</style></noscript>
     
@@ -1003,6 +1004,7 @@ if($google_ad){
                   <li><a href="/in-tui-giay-hop-giay/">In Túi Giấy - Hộp Giấy</a></li>
                   <li><a href="/in-menu-nha-hang-quan-an/">In Menu</a></li>
                   <li><a href="/in-thiep-moi-su-kien/">In Thiệp Mời</a></li>
+                  <li><a href="/thiet-ke-va-in-lich-tet-2019/">In Lịch Tết</a></li>
                   <li><a href="/lien-he">Liên Hệ</a></li>
               </ul>
             </amp-sidebar>

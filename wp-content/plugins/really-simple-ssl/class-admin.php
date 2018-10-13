@@ -32,6 +32,7 @@ class rsssl_admin extends rsssl_front_end
     public $javascript_redirect = FALSE;
     public $htaccess_redirect = FALSE;
     public $htaccess_warning_shown = FALSE;
+    public $review_notice_shown = FALSE;
     public $ssl_success_message_shown = FALSE;
     public $hsts = FALSE;
     public $debug = TRUE;
@@ -61,7 +62,6 @@ class rsssl_admin extends rsssl_front_end
         register_deactivation_hook(dirname(__FILE__) . "/" . $this->plugin_filename, array($this, 'deactivate'));
 
         add_action('admin_init', array($this, 'add_privacy_info'));
-
 
     }
 
@@ -109,6 +109,18 @@ class rsssl_admin extends rsssl_front_end
         }
 
         /*
+         * check if we're one minute past the activation. Then flush rewrite rules
+         * this way we lower the memory impact on activation
+         * Flush should happen on shutdown, not on init, as often happens in other plugins
+         * https://codex.wordpress.org/Function_Reference/flush_rewrite_rules
+         * */
+
+        if (get_option('rsssl_flush_rewrite_rules') && get_option('rsssl_flush_rewrite_rules') < strtotime("-1 minute")){
+            delete_option('rsssl_flush_rewrite_rules');
+            add_action('shutdown', 'flush_rewrite_rules');
+        }
+
+        /*
             Detect configuration when:
             - SSL activation just confirmed.
             - on settings page
@@ -124,8 +136,8 @@ class rsssl_admin extends rsssl_front_end
             //flush caches when just activated ssl
             //flush the permalinks
             if ($this->clicked_activate_ssl()) {
-                if (isset($_POST["rsssl_flush_rewrite_rules"])) {
-                    add_action('shutdown', 'flush_rewrite_rules');
+                if (!defined('RSSSL_NO_FLUSH') || !RSSSL_NO_FLUSH) {
+                    update_option('rsssl_flush_rewrite_rules', time());
                 }
                 add_action('admin_init', array(RSSSL()->rsssl_cache, 'flush'), 40);
             }
@@ -134,7 +146,6 @@ class rsssl_admin extends rsssl_front_end
                 //if we were to activate ssl, this could result in a redirect loop. So warn first.
                 add_action("admin_notices", array($this, 'show_notice_wpconfig_needs_fixes'));
                 if (is_multisite()) add_action('network_admin_notices', array($this, 'show_notice_wpconfig_needs_fixes'), 10);
-
                 $this->ssl_enabled = false;
                 $this->save_options();
             } elseif ($this->ssl_enabled) {
@@ -144,6 +155,11 @@ class rsssl_admin extends rsssl_front_end
 
         //when SSL is enabled, and not enabled by user, ask for activation.
         add_action("admin_notices", array($this, 'show_notice_activate_ssl'), 10);
+        add_action('rsssl_activation_notice', array($this, 'no_ssl_detected'), 10);
+        add_action('rsssl_activation_notice', array($this, 'ssl_detected'), 10);
+        add_action('rsssl_activation_notice_inner', array($this, 'almost_ready_to_migrate'), 30);
+        add_action('rsssl_activation_notice_inner', array($this, 'show_pro'), 40);
+        add_action('rsssl_activation_notice_inner', array($this, 'show_enable_ssl_button'), 50);
 
         add_action('plugins_loaded', array($this, 'check_plugin_conflicts'), 30);
 
@@ -166,9 +182,14 @@ class rsssl_admin extends rsssl_front_end
         //callbacks for the ajax dismiss buttons
         add_action('wp_ajax_dismiss_htaccess_warning', array($this, 'dismiss_htaccess_warning_callback'));
         add_action('wp_ajax_dismiss_success_message', array($this, 'dismiss_success_message_callback'));
+        add_action('wp_ajax_dismiss_review_notice', array($this, 'dismiss_review_notice_callback'));
 
         //handle notices
         add_action('admin_notices', array($this, 'show_notices'));
+        //show review notice, only to free users
+        if (!defined("rsssl_pro_version") && (!defined("rsssl_pp_version")) && (!defined("rsssl_soc_version")) && (!class_exists('RSSSL_PRO'))) {
+            add_action('admin_notices', array($this, 'show_leave_review_notice'));
+        }
         add_action("update_option_rlrsssl_options", array($this, "update_htaccess_after_settings_save"), 20, 3);
     }
 
@@ -215,8 +236,6 @@ class rsssl_admin extends rsssl_front_end
                 }
 
             } else {
-
-                error_log("remove from active plugins");
 
                 $current = get_option('active_plugins', array());
                 $current = $this->remove_plugin_from_array($plugin, $current);
@@ -281,6 +300,11 @@ class rsssl_admin extends rsssl_front_end
 
         if (isset($_POST['rsssl_do_activate_ssl'])) {
             $this->activate_ssl();
+
+            //if (empty(get_option('rsssl_activation_timestamp'))) {
+                update_option('rsssl_activation_timestamp', time());
+            //}
+
             return true;
         }
 
@@ -290,7 +314,7 @@ class rsssl_admin extends rsssl_front_end
 
     /*
         Activate the SSL for this site
-  */
+     */
 
     public function activate_ssl()
     {
@@ -328,8 +352,10 @@ class rsssl_admin extends rsssl_front_end
       This message is shown when no SSL is not enabled by the user yet
   */
 
+
     public function show_notice_activate_ssl()
     {
+
         if ($this->ssl_enabled) return;
 
         if (defined("RSSSL_DISMISS_ACTIVATE_SSL_NOTICE") && RSSSL_DISMISS_ACTIVATE_SSL_NOTICE) return;
@@ -337,40 +363,63 @@ class rsssl_admin extends rsssl_front_end
         //for multisite, show only activate when a choice has been made to activate networkwide or per site.
         if (is_multisite() && !RSSSL()->rsssl_multisite->selected_networkwide_or_per_site) return;
 
-        //on multistie, only show this message on the network admin. Per site activated sites have to go to the settings page.
+        //on multisite, only show this message on the network admin. Per site activated sites have to go to the settings page.
         //otherwise sites that do not need SSL possibly get to see this message.
 
         if (is_multisite() && !is_network_admin()) return;
 
         if (!$this->wpconfig_ok()) return;
 
-        if (!current_user_can($this->capability)) return; ?>
+        if (!current_user_can($this->capability)) return;
 
-        <?php if (!$this->site_has_ssl) { ?>
-        <div id="message" class="error fade notice rsssl-notice-certificate">
-            <h1><?php echo __("Detected possible certificate issues", "really-simple-ssl"); ?></h1>
-            <p>
+        do_action('rsssl_activation_notice');
+
+    }
+
+    public function ssl_detected()
+    {
+        if ($this->site_has_ssl) { ?>
+            <div id="message" class="updated fade notice activate-ssl">
                 <?php
-                $reload_https_url = "https://" . $_SERVER["HTTP_HOST"] . $_SERVER["REQUEST_URI"];
-                $link_open = '<p><a class="button" target="_blank" href="' . $reload_https_url . '">';
-                $link_close = '</a></p>';
-
-                printf(__("Really Simple SSL failed to detect a valid SSL certificate. If you do have an SSL certificate, try to reload this page over https by clicking this button: %sReload over https%s ", "really-simple-ssl"), $link_open, $link_close);
-
-                $ssl_test_url = "https://www.ssllabs.com/ssltest/";
-                $link_open = '<a target="_blank" href="' . $ssl_test_url . '">';
-                $link_close = '</a>';
-
-                printf(__("Really Simple SSL requires a valid SSL certificate. You can check your certificate on %sQualys SSL Labs%s.", "really-simple-ssl"), $link_open, $link_close);
+                  do_action('rsssl_activation_notice_inner');
                 ?>
-            </p>
-        </div>
-    <?php } ?>
+            </div>
+            <?php
+        }
+    }
 
-        <div id="message" class="updated fade notice activate-ssl">
-            <?php if ($this->site_has_ssl) { ?>
-                <h1><?php _e("Almost ready to migrate to SSL!", "really-simple-ssl"); ?></h1>
-            <?php } ?>
+    public function no_ssl_detected()
+    {
+        if (!$this->site_has_ssl) { ?>
+            <div id="message" class="error fade notice rsssl-notice-certificate">
+                <h1><?php echo __("Detected possible certificate issues", "really-simple-ssl"); ?></h1>
+                <p>
+                    <?php
+                    $reload_https_url = "https://" . $_SERVER["HTTP_HOST"] . $_SERVER["REQUEST_URI"];
+                    $link_open = '<p><a class="button" target="_blank" href="' . $reload_https_url . '">';
+                    $link_close = '</a></p>';
+
+                    printf(__("Really Simple SSL failed to detect a valid SSL certificate. If you do have an SSL certificate, try to reload this page over https by clicking this button: %sReload over https%s ", "really-simple-ssl"), $link_open, $link_close);
+
+                    $ssl_test_url = "https://www.ssllabs.com/ssltest/";
+                    $link_open = '<a target="_blank" href="' . $ssl_test_url . '">';
+                    $link_close = '</a>';
+
+                    printf(__("Really Simple SSL requires a valid SSL certificate. You can check your certificate on %sQualys SSL Labs%s.", "really-simple-ssl"), $link_open, $link_close);
+                    ?>
+                </p>
+            </div>
+        <?php }
+    }
+
+
+    public function almost_ready_to_migrate()
+    { ?>
+            <h1><?php _e("Almost ready to migrate to SSL!", "really-simple-ssl"); ?></h1>
+
+            <?php //action?>
+
+
             <?php _e("Some things can't be done automatically. Before you migrate, please check for: ", 'really-simple-ssl'); ?>
             <p>
             <ul>
@@ -385,12 +434,8 @@ class rsssl_admin extends rsssl_front_end
                 <li> <?php printf(__("It is recommended to take a %sbackup%s of your site before activating SSL", 'really-simple-ssl'), $link_open, $link_close); ?> </li>
             </ul>
             </p>
-            <?php $this->show_pro(); ?>
-
-            <?php RSSSL()->really_simple_ssl->show_enable_ssl_button(); ?>
-        </div>
-    <?php }
-
+            <?php
+    }
 
     /**
      * @since 2.3
@@ -402,17 +447,15 @@ class rsssl_admin extends rsssl_front_end
         if ($this->site_has_ssl || (defined('rsssl_force_activate') && rsssl_force_activate)) {
             ?>
             <p>
+            <div class="rsssl-activate-ssl-button">
             <form action="" method="post">
                 <?php wp_nonce_field('rsssl_nonce', 'rsssl_nonce'); ?>
-                <div>
-                    <input type="checkbox" name="rsssl_flush_rewrite_rules"
-                           checked><label><?php _e("Flush rewrite rules on activation (deselect when you encounter errors)", "really-simple-ssl") ?></label>
-                </div>
                 <input type="submit" class='button button-primary'
                        value="<?php _e("Go ahead, activate SSL!", "really-simple-ssl"); ?>" id="rsssl_do_activate_ssl"
                        name="rsssl_do_activate_ssl">
                 <br><?php _e("You may need to login in again.", "really-simple-ssl") ?>
             </form>
+            </div>
             </p>
             <?php
         }
@@ -425,7 +468,7 @@ class rsssl_admin extends rsssl_front_end
 
     public function show_pro()
     {
-        if (!defined("rsssl_pro_version")) {
+        if ($this->site_has_ssl) {
             ?>
             <p><?php _e('You can also let the automatic scan of the pro version handle this for you, and get premium support, increased security with HSTS and more!', 'really-simple-ssl'); ?>
                 &nbsp;<a target="_blank"
@@ -473,6 +516,7 @@ class rsssl_admin extends rsssl_front_end
             $this->site_has_ssl = isset($options['site_has_ssl']) ? $options['site_has_ssl'] : FALSE;
             $this->hsts = isset($options['hsts']) ? $options['hsts'] : FALSE;
             $this->htaccess_warning_shown = isset($options['htaccess_warning_shown']) ? $options['htaccess_warning_shown'] : FALSE;
+            $this->review_notice_shown = isset($options['review_notice_shown']) ? $options['review_notice_shown'] : FALSE;
             $this->ssl_success_message_shown = isset($options['ssl_success_message_shown']) ? $options['ssl_success_message_shown'] : FALSE;
             $this->plugin_db_version = isset($options['plugin_db_version']) ? $options['plugin_db_version'] : "1.0";
             $this->debug = isset($options['debug']) ? $options['debug'] : FALSE;
@@ -686,8 +730,6 @@ class rsssl_admin extends rsssl_front_end
 
     public function remove_ssl_from_siteurl_in_wpconfig()
     {
-        if (!current_user_can($this->capability)) return;
-
         $wpconfig_path = $this->find_wp_config_path();
         if (!empty($wpconfig_path)) {
             $wpconfig = file_get_contents($wpconfig_path);
@@ -834,6 +876,7 @@ class rsssl_admin extends rsssl_front_end
                 $rule .= '|| (isset($_SERVER["HTTP_CF_VISITOR"]) && (strpos($_SERVER["HTTP_CF_VISITOR"], "https") !== false))' . "\n";
                 $rule .= '|| (isset($_SERVER["HTTP_CLOUDFRONT_FORWARDED_PROTO"]) && (strpos($_SERVER["HTTP_CLOUDFRONT_FORWARDED_PROTO"], "https") !== false))' . "\n";
                 $rule .= '|| (isset($_SERVER["HTTP_X_FORWARDED_PROTO"]) && (strpos($_SERVER["HTTP_X_FORWARDED_PROTO"], "https") !== false))' . "\n";
+                $rule .= '|| (isset($_SERVER["HTTP_X_PROTO"]) && (strpos($_SERVER["HTTP_X_PROTO"], "SSL") !== false))' . "\n";
                 $rule .= ') {' . "\n";
                 $rule .= '$_SERVER["HTTPS"] = "on";' . "\n";
                 $rule .= '}' . "\n";
@@ -1011,8 +1054,6 @@ class rsssl_admin extends rsssl_front_end
 
     public function set_siteurl_to_ssl()
     {
-        if (!current_user_can($this->capability)) return;
-
         $this->trace_log("converting siteurl and homeurl to https");
 
         $siteurl_ssl = str_replace("http://", "https://", get_option('siteurl'));
@@ -1050,13 +1091,12 @@ class rsssl_admin extends rsssl_front_end
 
     public function save_options()
     {
-        if (!current_user_can($this->capability)) return;
-
         //any options added here should also be added to function options_validate()
         $options = array(
             'site_has_ssl' => $this->site_has_ssl,
             'hsts' => $this->hsts,
             'htaccess_warning_shown' => $this->htaccess_warning_shown,
+            'review_notice_shown' => $this->review_notice_shown,
             'ssl_success_message_shown' => $this->ssl_success_message_shown,
             'autoreplace_insecure_links' => $this->autoreplace_insecure_links,
             'plugin_db_version' => $this->plugin_db_version,
@@ -1070,6 +1110,8 @@ class rsssl_admin extends rsssl_front_end
         );
 
         update_option('rlrsssl_options', $options);
+
+
     }
 
     /**
@@ -1103,6 +1145,7 @@ class rsssl_admin extends rsssl_front_end
         $this->site_has_ssl = FALSE;
         $this->hsts = FALSE;
         $this->htaccess_warning_shown = FALSE;
+        $this->review_notice_shown = FALSE;
         $this->ssl_success_message_shown = FALSE;
         $this->autoreplace_insecure_links = TRUE;
         $this->do_not_edit_htaccess = FALSE;
@@ -1144,6 +1187,7 @@ class rsssl_admin extends rsssl_front_end
             || (isset($_SERVER['HTTP_CF_VISITOR']) && (strpos($_SERVER['HTTP_CF_VISITOR'], 'https') !== false))
             || (isset($_SERVER['HTTP_CLOUDFRONT_FORWARDED_PROTO']) && (strpos($_SERVER['HTTP_CLOUDFRONT_FORWARDED_PROTO'], 'https') !== false))
             || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && (strpos($_SERVER['HTTP_X_FORWARDED_PROTO'], 'https') !== false))
+            || (isset($_SERVER['HTTP_X_PROTO']) && (strpos($_SERVER['HTTP_X_PROTO'], 'SSL') !== false))
         ) {
             $server_var = TRUE;
         }
@@ -1191,8 +1235,12 @@ class rsssl_admin extends rsssl_front_end
                 $this->ssl_type = "CLOUDFLARE";
             } elseif ((strpos($filecontents, "#LOADBALANCER#") !== false) || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && ($_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https'))) {
                 $this->ssl_type = "LOADBALANCER";
-            } elseif ((strpos($filecontents, "#CDN#") !== false) || (isset($_SERVER['HTTP_X_FORWARDED_SSL']) && ($_SERVER['HTTP_X_FORWARDED_SSL'] == 'on' || $_SERVER['HTTP_X_FORWARDED_SSL'] == '1'))) {
-                $this->ssl_type = "CDN";
+            } elseif ((strpos($filecontents, "#HTTP_X_PROTO#") !== false) || (isset($_SERVER['HTTP_X_PROTO']) && ($_SERVER['HTTP_X_PROTO'] == 'SSL'))) {
+                $this->ssl_type = "HTTP_X_PROTO";
+            } elseif ((strpos($filecontents, "#HTTP_X_FORWARDED_SSL_ON#") !== false) || (isset($_SERVER['HTTP_X_FORWARDED_SSL']) && $_SERVER['HTTP_X_FORWARDED_SSL'] == 'on')) {
+                $this->ssl_type = "HTTP_X_FORWARDED_SSL_ON";
+            } elseif ((strpos($filecontents, "#HTTP_X_FORWARDED_SSL_1#") !== false) || (isset($_SERVER['HTTP_X_FORWARDED_SSL']) && $_SERVER['HTTP_X_FORWARDED_SSL'] == '1')) {
+                $this->ssl_type = "HTTP_X_FORWARDED_SSL_1";
             } elseif ((strpos($filecontents, "#SERVER-HTTPS-ON#") !== false) || (isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) == 'on')) {
                 $this->ssl_type = "SERVER-HTTPS-ON";
             } elseif ((strpos($filecontents, "#SERVER-HTTPS-1#") !== false) || (isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) == '1')) {
@@ -1262,8 +1310,14 @@ class rsssl_admin extends rsssl_front_end
             case "LOADBALANCER":
                 $testpage_url .= "loadbalancer";
                 break;
-            case "CDN":
-                $testpage_url .= "cdn";
+            case "HTTP_X_PROTO":
+                $testpage_url .= "serverhttpxproto";
+                break;
+            case "HTTP_X_FORWARDED_SSL_ON":
+                $testpage_url .= "serverhttpxforwardedsslon";
+                break;
+            case "HTTP_X_FORWARDED_SSL_1":
+                $testpage_url .= "serverhttpxforwardedssl1";
                 break;
             case "SERVER-HTTPS-ON":
                 $testpage_url .= "serverhttpson";
@@ -1654,7 +1708,6 @@ class rsssl_admin extends rsssl_front_end
 
     public function get_redirect_rules($manual = false)
     {
-        if (!current_user_can($this->capability)) return;
         $this->trace_log("retrieving redirect rules");
         //only add the redirect rules when a known type of SSL was detected. Otherwise, we use https.
         $rule = "";
@@ -1672,14 +1725,18 @@ class rsssl_admin extends rsssl_front_end
                 $rule .= "RewriteCond %{HTTPS} !=1" . "\n";
             } elseif ($this->ssl_type == "LOADBALANCER") {
                 $rule .= "RewriteCond %{HTTP:X-Forwarded-Proto} !https" . "\n";
+            } elseif ($this->ssl_type == "HTTP_X_PROTO") {
+                $rule .= "RewriteCond %{HTTP:X-Proto} !SSL" . "\n";
             } elseif ($this->ssl_type == "CLOUDFLARE") {
                 $rule .= "RewriteCond %{HTTP:CF-Visitor} '" . '"scheme":"http"' . "'" . "\n";//some concatenation to get the quotes right.
             } elseif ($this->ssl_type == "SERVERPORT443") {
                 $rule .= "RewriteCond %{SERVER_PORT} !443" . "\n";
             } elseif ($this->ssl_type == "CLOUDFRONT") {
                 $rule .= "RewriteCond %{HTTP:CloudFront-Forwarded-Proto} !https" . "\n";
-            } elseif ($this->ssl_type == "CDN") {
+            } elseif ($this->ssl_type == "HTTP_X_FORWARDED_SSL_ON") {
                 $rule .= "RewriteCond %{HTTP:X-Forwarded-SSL} !on" . "\n";
+            } elseif ($this->ssl_type == "HTTP_X_FORWARDED_SSL_1") {
+                $rule .= "RewriteCond %{HTTP:X-Forwarded-SSL} !=1" . "\n";
             } elseif ($type == "ENVHTTPS") {
                 $rule .= "RewriteCond %{ENV:HTTPS} !=on" . "\n";
             }
@@ -1761,7 +1818,7 @@ class rsssl_admin extends rsssl_front_end
                     <br><br><code>
                         //Begin Really Simple SSL Load balancing fix<br>
                         $server_opts = array("HTTP_CLOUDFRONT_FORWARDED_PROTO" => "https", "HTTP_CF_VISITOR"=>"https",
-                        "HTTP_X_FORWARDED_PROTO"=>"https", "HTTP_X_FORWARDED_SSL"=>"on",
+                        "HTTP_X_FORWARDED_PROTO"=>"https", "HTTP_X_FORWARDED_SSL"=>"on", "HTTP_X_PROTO"=>"SSL",
                         "HTTP_X_FORWARDED_SSL"=>"1");<br>
                         foreach( $server_opts as $option => $value ) {<br>
                         &nbsp;if ((isset($_ENV["HTTPS"]) && ( "on" == $_ENV["HTTPS"] )) || (isset( $_SERVER[ $option ] )
@@ -1789,6 +1846,24 @@ class rsssl_admin extends rsssl_front_end
         <?php
     }
 
+    public function show_leave_review_notice()
+    {
+        if (!$this->review_notice_shown && get_option('rsssl_activation_timestamp') && get_option('rsssl_activation_timestamp') < strtotime("-1 month")) {
+            add_action('admin_print_footer_scripts', array($this, 'insert_dismiss_review'));
+            ?>
+            <div id="message" class="updated fade notice is-dismissible rlrsssl-review">
+                <p><?php printf(__('Hi, you have been using Really Simple SSL for a month now, awesome! If you have a moment, please consider leaving a review on WordPress.org to spread the word. We greatly appreciate it! If you have any questions or feedback, leave us a %smessage%s.', 'really-simple-ssl'),'<a href="https://really-simple-ssl.com/contact" target="_blank">','</a>'); ?></p>
+                <i>- Rogier</i>
+                <?php //Inline style because the main.css stylesheet is only included on Really Simple SSL admin pages.?>
+                <ul style="margin-left: 30px; list-style: square;">
+                    <li><p style="margin-top: -5px;"><a target="_blank" href="https://wordpress.org/support/plugin/really-simple-ssl/reviews/#new-post"><?php _e('Leave a review', 'really-simple-ssl'); ?></a></p></li>
+                    <li><p style="margin-top: -5px;"><a href="#" id="maybe-later"><?php _e('Maybe later', 'really-simple-ssl'); ?></a></p></li>
+                    <li><p style="margin-top: -5px;"><a href="#" class="review-dismiss"><?php _e('No thanks', 'really-simple-ssl'); ?></a></p></li>
+                </ul>
+            </div>
+            <?php
+        }
+    }
 
     /**
      * Show notices
@@ -1903,7 +1978,7 @@ class rsssl_admin extends rsssl_front_end
     }
 
     /**
-     * Insert some ajax script to dismis the htaccess failed fail message, and stop nagging about it
+     * Insert some ajax script to dismiss the htaccess failed fail message, and stop nagging about it
      *
      * @since  2.0
      *
@@ -1926,6 +2001,48 @@ class rsssl_admin extends rsssl_front_end
 
                     });
                 });
+            });
+        </script>
+        <?php
+    }
+
+    /**
+     * Insert some ajax script to dismiss the review notice, and stop nagging about it
+     *
+     * @since  2.0
+     *
+     * @access public
+     *
+     * type: dismiss, later
+     *
+     */
+
+    public function insert_dismiss_review()
+    {
+        $ajax_nonce = wp_create_nonce("really-simple-ssl");
+        ?>
+        <script type='text/javascript'>
+            jQuery(document).ready(function ($) {
+                $(".rlrsssl-review.notice.is-dismissible").on("click", ".notice-dismiss", function (event) {
+                    rsssl_dismiss_review('dismiss');
+                });
+                $(".rlrsssl-review.notice.is-dismissible").on("click", "#maybe-later", function (event) {
+                    rsssl_dismiss_review('later');
+                    $(this).closest('.rlrsssl-review').remove();
+                });
+                $(".rlrsssl-review.notice.is-dismissible").on("click", ".review-dismiss", function (event) {
+                    rsssl_dismiss_review('dismiss');
+                    $(this).closest('.rlrsssl-review').remove();
+                });
+
+                function rsssl_dismiss_review(type){
+                    var data = {
+                        'action': 'dismiss_review_notice',
+                        'type' : type,
+                        'security': '<?php echo $ajax_nonce; ?>'
+                    };
+                    $.post(ajaxurl, data, function (response) {});
+                }
             });
         </script>
         <?php
@@ -1966,6 +2083,32 @@ class rsssl_admin extends rsssl_front_end
         wp_die(); // this is required to terminate immediately and return a proper response
     }
 
+    /**
+     * Process the ajax dismissal of the htaccess message.
+     *
+     * @since  2.1
+     *
+     * @access public
+     *
+     */
+
+    public function dismiss_review_notice_callback()
+    {
+        check_ajax_referer('really-simple-ssl', 'security');
+
+        $type = isset($_POST['type']) ? $_POST['type'] : false;
+
+        if ($type === 'dismiss'){
+            $this->review_notice_shown = TRUE;
+        }
+        if ($type === 'later') {
+            //Reset activation timestamp, notice will show again in one month.
+            update_option('rsssl_activation_timestamp', time());
+        }
+
+        $this->save_options();
+        wp_die(); // this is required to terminate immediately and return a proper response
+    }
 
     /**
      * Adds the admin options page
@@ -1980,7 +2123,7 @@ class rsssl_admin extends rsssl_front_end
     {
         if (!current_user_can($this->capability)) return;
         //hides the settings page if the hide menu for subsites setting is enabled
-        if (is_multisite() && rsssl_multisite::this()->hide_menu_for_subsites) return;
+        if (is_multisite() && rsssl_multisite::this()->hide_menu_for_subsites && !is_super_admin()) return;
 
         global $rsssl_admin_page;
         $rsssl_admin_page = add_options_page(
@@ -2278,8 +2421,8 @@ class rsssl_admin extends rsssl_front_end
                       $this->get_banner_html(array(
                               'img' => 'complianz.jpg',
                               'title' => 'ComplianZ',
-                              'description' => __("Do you have visitors from the European Union? Get GDPR ready in 30 minutes with Complianz GDPR. Always up-to-date legal documents by one of the most prominent EU IT Law firms.", "really-simple-ssl"),
-                              'url' => 'https://complianz.io/',
+                              'description' => __("The Complianz GDPR Privacy Suite for WordPress. Simple, Quick and Complete. Up-to-date legal documents by one of the most prominent EU IT Law firms.", "really-simple-ssl"),
+                              'url' => 'https://wordpress.org/plugins/complianz-gdpr/',
                               'pro' => true,
                            )
                         );
@@ -2318,6 +2461,7 @@ class rsssl_admin extends rsssl_front_end
                             );
 
                         }
+                    }
 
                         if (defined("EDD_SL_PLUGIN_DIR") && (get_locale() === 'nl_NL')) {
                             $this->get_banner_html(array(
@@ -2340,7 +2484,7 @@ class rsssl_admin extends rsssl_front_end
                             );
 
                         }
-                    } ?>
+                     ?>
                 </div>
             <?php }
             ?>
@@ -2567,6 +2711,7 @@ class rsssl_admin extends rsssl_front_end
         $newinput['site_has_ssl'] = $this->site_has_ssl;
         $newinput['ssl_success_message_shown'] = $this->ssl_success_message_shown;
         $newinput['htaccess_warning_shown'] = $this->htaccess_warning_shown;
+        $newinput['review_notice_shown'] = $this->review_notice_shown;
         $newinput['plugin_db_version'] = $this->plugin_db_version;
         $newinput['ssl_enabled'] = $this->ssl_enabled;
         $newinput['debug_log'] = $this->debug_log;
@@ -2634,7 +2779,7 @@ class rsssl_admin extends rsssl_front_end
 
     public function get_option_debug()
     {
-        $options = get_option('rlrsssl_options');
+    $options = get_option('rlrsssl_options');
         echo '<input id="rlrsssl_options" name="rlrsssl_options[debug]" size="40" type="checkbox" value="1"' . checked(1, $this->debug, false) . " />";
         RSSSL()->rsssl_help->get_help_tip(__("Enable this option to get debug info in the debug tab.", "really-simple-ssl"));
 
@@ -2659,7 +2804,6 @@ class rsssl_admin extends rsssl_front_end
             $javascript_redirect = TRUE;
             $comment = __("This option is enabled on the network menu.", "really-simple-ssl");
         }
-
         echo '<input ' . $disabled . ' id="rlrsssl_options" name="rlrsssl_options[javascript_redirect]" size="40" type="checkbox" value="1"' . checked(1, $javascript_redirect, false) . " />";
         RSSSL()->rsssl_help->get_help_tip(__("This is a fallback you should only use if other redirection methods do not work.", "really-simple-ssl"));
         echo $comment;
@@ -2813,7 +2957,7 @@ class rsssl_admin extends rsssl_front_end
 
         ?>
         <div><input class="thickbox button" title="" type="button" style="display: block; float: left;" alt="#TB_inline?
-        height=370&width=400&inlineId=deactivate_keep_ssl" value="Deactivate Plugin and keep SSL"/></div>
+        height=370&width=400&inlineId=deactivate_keep_ssl" value="<?php echo __('Deactivate Plugin and keep SSL', 'really-simple-ssl'); ?>"/></div>
         <div id="deactivate_keep_ssl" style="display: none;">
 
             <h1 style="margin: 10px 0; text-align: center;"><?php _e("Are you sure?", "really-simple-ssl") ?></h1>
@@ -3025,6 +3169,5 @@ class rsssl_admin extends rsssl_front_end
 
         return $filecontents;
     }
-
 
 } //class closure

@@ -5,7 +5,7 @@ jQuery(document).ready(function($){
 	
 	  $("#btnShowSubService").fancybox({
             width:1200,
-            height:240,
+            height:360,
             autoSize:false
         });
 	
