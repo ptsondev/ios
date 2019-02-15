@@ -151,6 +151,29 @@ img{
 #header-row-2{	
 	
 }
+h1{
+    font-size: 26px;
+}
+#breadcrumb ol{
+    padding: 0;
+}
+#service-header{
+    position: sticky;
+    top: 0;
+    background: #FFF;
+    z-index: 999;    
+}
+#service-tabs{
+    border-bottom: 1px solid #ccc;
+    padding: 5px 0;
+}
+#service-tabs a{
+    padding: 2px 10px;
+    background: #f9f9f9;
+}
+#service-tabs a.active{
+    background: #ccc;
+}
 #site-name{
 	color:#01aef0;
 	text-transform:uppercase;
@@ -161,6 +184,37 @@ img{
     padding-top: 20px;
 }
 #site-menu{
+}
+#service-title{
+    margin: 15px 0 5px 0;
+}
+#tab-images{
+    display: inline-block;
+    width: 100%;    
+}
+
+#tab-images img{
+    display: inline-block;
+    float: left;
+    width: 30%;
+    margin: 5px 1.5%;
+}
+.s-tab-content{    
+}
+#tab-order label{
+    width: 120px;
+    font-weight: normal;
+}
+#tab-order input,
+#tab-order select{
+    width: 150px;
+}
+#tab-order textarea{    
+    width: 710px;
+    height: 100px;
+}
+#tab-order input[type="submit"]{
+    width: 710px;    
 }
 #main-menu {
 	padding-top: 40px;
@@ -499,7 +553,7 @@ table tr:first-child{
 }
 
 img{
-    width:80%;
+    width:70%;
     margin:0;
 }
 

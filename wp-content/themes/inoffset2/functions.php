@@ -1,9 +1,10 @@
 <?php
 DEFINE('PATH_TO_IMG', get_template_directory_uri().'/images');
+require_once(get_template_directory().'/aio_image_resize.php');
 
 function connect_db(){
     require_once 'EasyMySQLi.inc.php'; 
-    $db = new EasyMySQLi('localhost', 'root', 'mysqlHaoilaHa', 'wp_inoffsethcm'); 
+    $db = new EasyMySQLi('localhost', 'root', '', 'wp_inoffsethcm'); 
     $db->set_charset("utf8");
     return $db;
 }

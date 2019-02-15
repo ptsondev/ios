@@ -520,6 +520,25 @@ img{
     display: inline-block;
     float: left;
 }
+
+#service-header{
+    position: sticky;
+    top: 0;
+    background: #FFF;
+    z-index: 999;    
+}
+#service-tabs{
+    border-bottom: 1px solid #ccc;
+    padding: 5px 0;
+}
+#service-tabs a{
+    padding: 2px 10px;
+    background: #f9f9f9;
+}
+#service-tabs a.active{
+    background: #ccc;
+}
+
 @media (max-width: 768px) {   
     #site-name{
         height: 70px;

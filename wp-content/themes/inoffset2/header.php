@@ -29,12 +29,12 @@ if($google_ad){
         <title>
             <?php wp_title( '|', true, 'right' ); ?>
         </title>
-
-        <link rel="shortcut icon" href="<?php echo PATH_TO_IMG;?>/favicon.ico" type="image/x-icon"/>
-        
+    
         <link href="<?php echo get_template_directory_uri()?>/css/bootstrap.css" rel="stylesheet" />
         <link href="<?php echo get_template_directory_uri()?>/js/fancybox/jquery.fancybox.css" rel="stylesheet" />
         <link href="<?php echo get_template_directory_uri()?>/css/fonts/fonts.css" rel="stylesheet" />
+        <link href="<?php echo get_template_directory_uri(); ?>/css/Font-Awesome-master/web-fonts-with-css/css/fontawesome-all.min.css" rel="stylesheet">
+        
         <link href="<?php echo get_template_directory_uri()?>/css/main.css" rel="stylesheet" />
 
         <script type="text/javascript" src="<?php echo get_template_directory_uri()?>/js/jquery.min.js"></script>
@@ -64,24 +64,7 @@ if($google_ad){
   gtag('config', 'AW-968191709');
 </script>
 
-        <!-- Facebook Pixel Code -->
-<script>
-  !function(f,b,e,v,n,t,s)
-  {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-  n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-  if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-  n.queue=[];t=b.createElement(e);t.async=!0;
-  t.src=v;s=b.getElementsByTagName(e)[0];
-  s.parentNode.insertBefore(t,s)}(window, document,'script',
-  'https://connect.facebook.net/en_US/fbevents.js');
-  fbq('init', '2101640930088537');
-  fbq('track', 'PageView');
-</script>
-<noscript><img height="1" width="1" style="display:none"
-  src="https://www.facebook.com/tr?id=2101640930088537&ev=PageView&noscript=1"
-/></noscript>
-<!-- End Facebook Pixel Code -->
-
+        
 
     </head>
 
@@ -124,26 +107,32 @@ if($google_ad){
         <div id="site-header">
             <div id="header-contact" class="">
                 <div class="container">
-                    <a class="pull-left" href="mailto:info.inoffsethcm@gmail.com">info.inoffsethcm@gmail.com</a>
-                    <a class="pull-right" href="tel:0911667771">0911.66.77.71</a>
+                    <a class="pull-left" href="mailto:info.inoffsethcm@gmail.com">
+                        <i class="far fa-envelope"></i> info.inoffsethcm@gmail.com
+                    </a>
+                    <a class="pull-right" href="tel:0911667771">
+                        <i class="fa fa-phone" aria-hidden="true"></i> Hotline: 0911.66.77.71
+                    </a>
                 </div>
             </div>
 
             <div id="header-row-2" class="">
                 <div class="container">
-                    <div class="col-sm-4 col-xs-12">
-                        <div id="site-logo"><a href="/"><img src="<?php echo PATH_TO_IMG?>/logo.png" /></a></div>
-                    </div>
-                    <div class="col-sm-6 col-xs-12 pull-right" id="site-menu">
-                        <div id="main-menu">
-                            <!--<form id="search-area" action="/search-service">
-                                <input id="txtSearchService" type="text" value="" placeholder="Bạn cần in gì?" />
-                                <input type="submit" value="" id="btnSearch" />
-                            </form>-->
-                            <li><a href="#sub-menu-print" id="btnShowSubService">Dịch Vụ In</a></li>
-                            <li><a href="/lien-he">Liên Hệ</a></li>
+                    <div class="row">
+                        <div class="col-sm-4 col-xs-12">
+                            <div id="site-logo"><a href="/"><img src="<?php echo PATH_TO_IMG?>/logo.png" /></a></div>
                         </div>
+                        <div class="col-sm-6 col-xs-12 pull-right" id="site-menu">
+                            <div id="main-menu">
+                                <!--<form id="search-area" action="/search-service">
+                                    <input id="txtSearchService" type="text" value="" placeholder="Bạn cần in gì?" />
+                                    <input type="submit" value="" id="btnSearch" />
+                                </form>-->
+                                <li><a href="#sub-menu-print" id="btnShowSubService">Dịch Vụ In</a></li>
+                                <li><a href="/lien-he">Liên Hệ</a></li>
+                            </div>
 
+                        </div>
                     </div>
                     <div id="sub-menu-print" style="display:none;">
 
@@ -161,12 +150,6 @@ if($google_ad){
                                     <div class="ava"> <img src="/wp-content/uploads/2017/10/in-nhanh-card-tren-giay-kraft.jpg" /></div>
                                 </a>
                             </div>
-                            <div class="item">
-                                <a href="/in-menu-nha-hang-quan-an/">
-                                    <div class="name">In menu</div>
-                                    <div class="ava"> <img src="/wp-content/uploads/2018/05/in-menu-kem.jpg" /></div>
-                                </a>
-                            </div>
                         </div>
 
                         <div class="col-sm-4 col-xs-12">
@@ -182,12 +165,6 @@ if($google_ad){
                                     <div class="ava"><img src="<?php echo PATH_TO_IMG?>/in-to-roi.png" /></div>
                                 </a>
                             </div>
-                            <div class="item">
-                                <a href="/in-thiep-moi-su-kien/">
-                                    <div class="name">In thiệp mời</div>
-                                    <div class="ava"><img src="/wp-content/uploads/2018/05/chuyen-in-nhanh-thiep-moi.jpg" /></div>
-                                </a>
-                            </div>
                         </div>
                         <div class="col-sm-4 col-xs-12">
                             <div class="item">
@@ -200,12 +177,6 @@ if($google_ad){
                                 <a href="/in-tui-giay-hop-giay/">
                                     <div class="name">In túi giấy</div>
                                     <div class="ava"><img src="<?php echo PATH_TO_IMG?>/in-tui-giay.jpg" /></div>
-                                </a>
-                            </div>
-                            <div class="item">
-                                <a href="/thiet-ke-va-in-lich-tet-2019/">
-                                    <div class="name">In lịch tết</div>
-                                    <div class="ava"><img src="/wp-content/uploads/2017/09/thiet-ke-va-in-lich-tet-2019.jpg" /></div>
                                 </a>
                             </div>
                         </div>
