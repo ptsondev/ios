@@ -283,6 +283,19 @@ if($google_ad){
   clear: both;
 }
 
+       
+        
+#note-before-order{
+    padding: 10px;
+    font-weight: 100;
+    border: dotted 1px #0094be;
+    -webkit-border-radius: 20px;
+	-moz-border-radius: 20px;
+	border-radius: 20px;
+}
+#note-before-order h3{
+    color: #0094be;
+}
         
          #sidebar1{
             background: #4d4d4f;
@@ -753,6 +766,27 @@ if($google_ad){
 }
 */
         
+        .wpcf7-form input,
+        .wpcf7-form select{
+            border: 1px solid #ccc;
+            width: 200px;
+            float: right;
+        }
+        .wpcf7-form textarea{
+            width: 100%;
+            border: 1px solid #ccc;
+        }
+        .wpcf7-form label{
+            width: 100px;
+            display: inline-block;
+        }
+        .wpcf7-form input[type=submit]{
+            width: 100%;
+            background: #0094be;
+            text-transform: uppercase;
+            color: #FFF;
+            padding: 10px;
+        }
         #list-services li a {
             color: #FFF;
             font-size: 20px;

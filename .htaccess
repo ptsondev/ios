@@ -1,4 +1,9 @@
 Redirect 301 /in-nhanh-namecard-danh-thiep-lay-trong-ngay/ /dich-vu/in-namecard-danh-thiep/
+Redirect 301 /in-catalogue-chat-luong-cao/ /dich-vu/in-catalogue/
+Redirect 301 /in-tui-giay-hop-giay/ /dich-vu/in-tui-giay-hop-giay/
+Redirect 301 /in-folder-kep-file-bia-ho-so/ /dich-vu/in-folder-kep-file-bia-ho-so/
+Redirect 301 /in-profile-cong-ty/ /dich-vu/in-profile-ho-so-nang-luc-cong-ty/
+Redirect 301 /in-to-roi-to-gap-flyer-leaflet/ /dich-vu/in-to-roi-to-gap-flyer-leaflet/
 
 # BEGIN All In One WP Security
 #AIOWPS_BASIC_HTACCESS_RULES_START

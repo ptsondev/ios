@@ -23,7 +23,7 @@
                                     <a class="tab-title active" href="#tab-intro"><?php echo $tab1; ?></a>
                                     <a class="tab-title" href="#tab-images"><?php echo $tab2; ?></a>
                                     <a class="tab-title" href="#tab-prices"><?php echo $tab3; ?></a>
-                                    <a class="tab-title" href="#tab-order"><?php echo $tab4; ?></a>
+                                    <a id="btnSorder" class="tab-title" href="#tab-order"><?php echo $tab4; ?></a>
                             </div>
 
                                 
@@ -32,6 +32,9 @@
                             <div  class="entry-content" itemprop="text">
                                 <div class="s-tab-content" id="tab-intro">
                                     <?php the_content(); ?>
+                                    
+                                    <h3>Liên Hệ Tư Vấn &amp; Báo Giá</h3>
+                                    <b>Liên hệ đặt in qua hotline <a href="tel:0911667771">0911 66 77 71</a> hoặc <a href="#tab-order" id="btnClickTabOrder">tab đặt in</a> bên trên</b>
                                 </div>
 
                                 <div class="s-tab-content" id="tab-images">
@@ -67,7 +70,16 @@
                         
                             <div class="s-tab-content" id="tab-order">
                                     <?php $order = get_post_meta(get_the_ID(), 'wpcf-order-service', 1); echo do_shortcode($order); ?>
+                                
+                                <div id="note-before-order">
+                                    <h3>1 số lưu ý trước khi đặt in</h3> 
+                                    <i class="fas fa-check"></i> Gửi đầy đủ thông tin quy cách và file.
+                                    (upload files lên google drive hoặc cloud nào đó rồi gửi link để quá trình download được nhanh hơn.<br/> 
+                                    <i class="fas fa-check"></i> 1 ví dụ chi tiết: <i>"Tôi cần in 500 cuốn catalogue, mỗi cuốn 32 trang (cả bìa), kích thước thành phẩm 30x21cm, bìa dày ruột mỏng, đóng cuốn bấm kim giữa. File download tại:...."</i><br/>
+                                    <i class="fas fa-check"></i> Trong trường hợp cần lấy gấp, hoặc có bất cứ yêu cầu in đặc biệt nào, vui lòng ghi rõ hoặc liên hệ hotline trên để được tư vấn cụ thể. <br/> 
+                                    <b>Hân hạnh được phục vụ quý khách hàng!</b>
                                 </div>
+                            </div>
                         
                         <?php edit_post_link( __( 'Edit', 'twentythirteen' ), '<span class="edit-link">', '</span>' ); ?>					
                     </article>

@@ -39,8 +39,7 @@ jQuery(document).ready(function($){
 	});
     
     $('#btnClickTabOrder').click(function(){
-        $('.s-tab-content').hide();
-        $('#tab-order').show();
+        $('#btnSorder').trigger('click');
     });
 });
 
