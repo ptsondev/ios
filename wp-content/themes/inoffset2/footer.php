@@ -18,6 +18,29 @@
 	
 <?php wp_footer(); ?>
   
+            <script>
+  window.fbAsyncInit = function() {
+    FB.init({
+      xfbml            : true,
+      version          : 'v3.2'
+    });
+  };
+
+  (function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return;
+  js = d.createElement(s); js.id = id;
+  js.src = 'https://connect.facebook.net/vi_VN/sdk/xfbml.customerchat.js';
+  fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));</script>
+
+            
+           <div class="fb-customerchat"
+              attribution=setup_tool
+              page_id="271793053342017"
+              logged_in_greeting="Xin chào. Chúng tôi có thể giúp gì cho bạn?"
+              logged_out_greeting="Xin chào. Chúng tôi có thể giúp gì cho bạn?">
+            </div>
             
             <!-- Histats.com  START (hidden counter) -->
 <!-- Histats.com  START  (aync)-->
@@ -30,7 +53,7 @@ var hs = document.createElement('script'); hs.type = 'text/javascript'; hs.async
 hs.src = ('//s10.histats.com/js15_as.js');
 (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(hs);
 })();</script>
-<noscript><a href="/" target="_blank"><img  src="//sstatic1.histats.com/0.gif?3835820&101" alt="" border="0"></a></noscript>
+<noscript><a href="/" target="_blank"><img style="display:nonel" src="//sstatic1.histats.com/0.gif?3835820&101" alt="" border="0"></a></noscript>
 <!-- Histats.com  END  -->
     
 </body>

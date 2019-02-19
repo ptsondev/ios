@@ -4,6 +4,8 @@ Redirect 301 /in-tui-giay-hop-giay/ /dich-vu/in-tui-giay-hop-giay/
 Redirect 301 /in-folder-kep-file-bia-ho-so/ /dich-vu/in-folder-kep-file-bia-ho-so/
 Redirect 301 /in-profile-cong-ty/ /dich-vu/in-profile-ho-so-nang-luc-cong-ty/
 Redirect 301 /in-to-roi-to-gap-flyer-leaflet/ /dich-vu/in-to-roi-to-gap-flyer-leaflet/
+Redirect 301 /in-menu-nha-hang-quan-an/ /dich-vu/in-menu-nha-hang-quan-an/
+Redirect 301 /in-thiep-moi-su-kien/ /dich-vu/in-thiep-moi-su-kien/
 
 # BEGIN All In One WP Security
 #AIOWPS_BASIC_HTACCESS_RULES_START

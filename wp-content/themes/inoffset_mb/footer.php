@@ -20,7 +20,7 @@
   
             <!-- Histats.com  START (hidden counter) -->
 <a href="/" alt="" target="_blank" >
-<img  src="//sstatic1.histats.com/0.gif?3835820&101" alt="" border="0">
+<img style="display:none;" src="//sstatic1.histats.com/0.gif?3835820&101" alt="" border="0">
 <!-- Histats.com  END  -->
 </body>
 </html>
