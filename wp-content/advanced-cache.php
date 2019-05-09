@@ -190,7 +190,7 @@ if ($hc_gzip) {
     header('Content-Length: ' . filesize($hc_file));
 }
 
-if (1) {
+if (0) {
     readfile($hc_file);
 } else {
     echo file_get_contents($hc_file);

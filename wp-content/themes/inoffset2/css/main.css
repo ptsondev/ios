@@ -32,9 +32,6 @@ a:hover, a:focus{
 ul.list-style-none{
     list-style: none;
 }
-img{
-	width:100%;
-}
 
 #site-header{	
 	background:url('../images/header-contact2.png') repeat-x #FFF;	
@@ -161,6 +158,7 @@ h1{
     background: #FFF;
     z-index: 999;    
 }
+
 #service-tabs{
     padding: 5px 0;
     position: fixed;
@@ -176,6 +174,7 @@ h1{
     display: block;
     margin: 5px;
     width: 100px;
+    font-size: 14px;
     text-align: center;
     color:#FFF;
 }
@@ -183,17 +182,54 @@ h1{
 #service-tabs a:hover{
     background: #f26664;
 }
-#xxxservice-tabs a.active::after{
-    content: "";
-    display: inline-block;
-    width: 30px;
-    height: 30px;
-    background: url(../images/point.png) no-repeat;
-    background-size: contain;
-    position: absolute;
-    right: -25px;
-    top: 22px;
+
+#service-tabs a.active{
+    -webkit-animation: highLight 1s infinite; 
+    animation:    highLight 1s infinite; 
 }
+@keyframes highLight{
+    0%{
+        margin-left: 0;
+    }
+    50%{
+        margin-left: 10px;
+    }
+    100%{
+        margin-left: 0px;
+    }
+}
+@keyframes highLight2{
+    0%{
+        margin-top: 0;
+    }
+    50%{
+        margin-top: 10px;
+    }
+    100%{
+        margin-top: 0px;
+    }
+}
+/* service tabs for small resolution */ 
+@media (max-width: 1365px) {   
+    #service-tabs{
+        padding: 5px 0;
+        position: fixed;
+        left: 0;
+        top: 0;
+        background: #FFF;
+        width: 100%;
+        z-index: 9999;
+    }
+    #service-tabs a{
+        display: inline-block;
+        width: 18%;
+    }    
+    #service-tabs a.active{
+        -webkit-animation: none;
+        animation: none;
+    }
+}
+
 #site-name{
 	color:#01aef0;
 	text-transform:uppercase;
@@ -213,7 +249,7 @@ h1{
     width: 100%;    
 }
 
-#tab-images img{
+#main-area #tab-images img{
     display: inline-block;
     float: left;
     width: 30%;
@@ -584,9 +620,12 @@ table tr:first-child{
     color:#FFF;
 }
 
-img{
+#site-header img,
+#main-area img,
+#footer img{ 
     width:70%;
     margin:0;
+    height: auto;
 }
 
 .single-post #main-content img{
