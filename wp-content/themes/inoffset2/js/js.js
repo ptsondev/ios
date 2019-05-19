@@ -5,7 +5,7 @@ jQuery(document).ready(function($){
 	
 	  $("#btnShowSubService").fancybox({
             width:1200,
-            height:240,
+            height:340,
             autoSize:false
         });
 	
@@ -56,4 +56,17 @@ function parallax() {
 	}else{
 		$('body.page #site-header').removeClass('active');
 	}
+    
+    
+     
+    if ($("#sub-header").length) {
+        $('#sub-header').css('backgroundPosition', "70% " + Math.round((scrollPos - $('#sub-header').offset().top) * 1.1) + "px");
+    }
+    if ($("#sub-footer").length) {
+        $('#sub-footer').css('backgroundPosition', "50% " + Math.round((scrollPos - $('#sub-footer').offset().top) * 1.1) + "px");
+    }
 }
+
+
+
+

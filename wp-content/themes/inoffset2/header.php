@@ -134,6 +134,12 @@
                                     <div class="ava"> <img src="/wp-content/uploads/2017/10/in-nhanh-card-tren-giay-kraft.jpg" /></div>
                                 </a>
                             </div>
+                            <div class="item">
+                                <a href="/dich-vu/in-menu-nha-hang-quan-an/">
+                                    <div class="name">In namecard</div>
+                                    <div class="ava"> <img src="/wp-content/uploads/2018/05/in-menu-kem.jpg" /></div>
+                                </a>
+                            </div>
                         </div>
 
                         <div class="col-sm-4 col-xs-12">
@@ -147,6 +153,12 @@
                                 <a href="/in-to-roi-to-gap-flyer-leaflet/">
                                     <div class="name">In tờ rơi</div>
                                     <div class="ava"><img src="<?php echo PATH_TO_IMG?>/in-to-roi.png" /></div>
+                                </a>
+                            </div>
+                            <div class="item">
+                                <a href="/dich-vu/in-thiep-moi-su-kien/">
+                                    <div class="name">In tờ rơi</div>
+                                    <div class="ava"><img src="/wp-content/uploads/2018/05/chuyen-in-nhanh-thiep-moi.jpg" /></div>
                                 </a>
                             </div>
                         </div>
@@ -163,10 +175,18 @@
                                     <div class="ava"><img src="<?php echo PATH_TO_IMG?>/in-tui-giay.jpg" /></div>
                                 </a>
                             </div>
+                            <div class="item">
+                                <a href="/dich-vu/in-giay-tieu-de-giay-khen/">
+                                    <div class="name">In túi giấy</div>
+                                    <div class="ava"><img src="/wp-content/uploads/2019/05/09_LETTERHEAD.jpg" /></div>
+                                </a>
+                            </div>
                         </div>
                     </div>
 
 
                 </div>
-            </div>           
+            </div>          
+            
+            <div id="sub-header"></div>
         </div>

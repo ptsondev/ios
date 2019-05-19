@@ -22,7 +22,7 @@
                             <div id="service-tabs">
                                     <a class="tab-title active" href="#tab-intro"><?php echo $tab1; ?></a>
                                     <a class="tab-title" href="#tab-images"><?php echo $tab2; ?></a>
-                                    <a class="tab-title" href="#tab-prices"><?php echo $tab3; ?></a>
+                                    <!--a class="tab-title" href="#tab-prices"><?php echo $tab3; ?></a>-->
                                     <a id="btnSorder" class="tab-title" href="#tab-order"><?php echo $tab4; ?></a>
                             </div>
 
@@ -64,7 +64,7 @@
                                 </div>
 
                                 <div class="s-tab-content" id="tab-prices">
-                                    <?php $price = get_post_meta(get_the_ID(), 'wpcf-price', 1); echo ($price); ?>
+                                    <?php // $price = get_post_meta(get_the_ID(), 'wpcf-price', 1); echo ($price); ?>
                                 </div>
                             </div>	
                         
